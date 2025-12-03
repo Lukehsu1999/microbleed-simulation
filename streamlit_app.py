@@ -204,6 +204,8 @@ with st.sidebar:
     circular_lp = st.checkbox("Circular low-pass", value=True)
     show_kspace = st.checkbox("Show lesion |K| (log)", value=True)
 
+    in_mcb_enhance_contrast = st.checkbox("Enhance contrast within MCB", value=True)
+
 # ----- Load background -----
 if up is not None:
     bg_img = Image.open(up)
@@ -269,8 +271,8 @@ with st.sidebar:
             "oval_ratio2": float(oval_ratio2),
         }
 
-enhance_contrast = True # whether to enhance the contrast WITHIN the emboli
-if enhance_contrast:
+# ---------- Truncate and Blend -------
+if in_mcb_enhance_contrast:
   lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
   lesion_alpha_trunc = enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean, thresh=0.05, gamma=1.0)
   composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
@@ -278,7 +280,6 @@ else:
   lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
   lesion_alpha_trunc = np.clip(lesion_alpha_trunc, 0.0, 1.0)
   composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
-
 
 # ----- Zoom -----
 with st.sidebar:
@@ -293,6 +294,7 @@ y0 = int(np.clip(zoom_center_y - zoom_size // 2, 0, H - zoom_size))
 zoom_bg = bg[y0:y0 + zoom_size, x0:x0 + zoom_size]
 zoom_alpha_trunc = lesion_alpha_trunc[y0:y0 + zoom_size, x0:x0 + zoom_size]
 zoom_comp = composite[y0:y0 + zoom_size, x0:x0 + zoom_size]
+
 
 # ---------- Layout ----------
 top_cols = st.columns(4 if show_kspace else 3, gap="large")
@@ -393,6 +395,7 @@ config = {
         "noise_seed": int(seed if noisy_boundary else 0),
         "dark_val": float(dark_val),
         "blend_strength": float(strength),
+        "enhance_contrast_in_mcb": bool(in_mcb_enhance_contrast),
     },
     "gibbs": {
         "keep_frac": float(keep_frac),
