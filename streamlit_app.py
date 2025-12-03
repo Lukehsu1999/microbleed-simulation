@@ -12,23 +12,43 @@ import zipfile, json
 from datetime import datetime
 
 # ----- Try enhancing in-lesion contrast -------
+# def enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean,
+#                          thresh=0.05, gamma=1.0):
+#     """
+#     Boost contrast of the truncated lesion alpha *within* the lesion support.
+#     - thresh: define support from clean alpha (where lesion exists)
+#     - gamma: optional nonlinearity (gamma<1 -> fatter core, gamma>1 -> thinner core)
+#     """
+#     a = lesion_alpha_trunc.copy()
+#     support = lesion_alpha_clean > thresh
+#     vals = a[support]
+#     if vals.size > 0:
+#         vmin, vmax = vals.min(), vals.max()
+#         if vmax - vmin > 1e-6:
+#             vals = (vals - vmin) / (vmax - vmin)  # stretch to [0,1]
+#             if gamma != 1.0:
+#                 vals = vals**gamma
+#             a[support] = vals
+#     return np.clip(a, 0.0, 1.0)
 def enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean,
-                         thresh=0.05, gamma=1.0):
+                         core_thresh=0.5, gamma=1.0):
     """
-    Boost contrast of the truncated lesion alpha *within* the lesion support.
-    - thresh: define support from clean alpha (where lesion exists)
-    - gamma: optional nonlinearity (gamma<1 -> fatter core, gamma>1 -> thinner core)
+    Boost contrast mainly in the core; leave rim more stable.
     """
     a = lesion_alpha_trunc.copy()
-    support = lesion_alpha_clean > thresh
-    vals = a[support]
+
+    # core only (avoid including the outer rim / ripples)
+    core = lesion_alpha_clean > core_thresh
+
+    vals = a[core]
     if vals.size > 0:
         vmin, vmax = vals.min(), vals.max()
         if vmax - vmin > 1e-6:
-            vals = (vals - vmin) / (vmax - vmin)  # stretch to [0,1]
+            vals = (vals - vmin) / (vmax - vmin)
             if gamma != 1.0:
                 vals = vals**gamma
-            a[support] = vals
+            a[core] = vals
+
     return np.clip(a, 0.0, 1.0)
 
 # ---------- Fourier helpers (centered FFT/IFFT) ----------
