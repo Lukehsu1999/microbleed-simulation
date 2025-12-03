@@ -294,7 +294,7 @@ with st.sidebar:
 # ---------- Truncate and Blend -------
 if in_mcb_enhance_contrast:
   lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
-  lesion_alpha_trunc = enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean, thresh=0.05, gamma=1.0)
+  lesion_alpha_trunc = enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean, core_thresh=0.05, gamma=1.0)
   composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
 else:
   lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
