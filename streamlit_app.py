@@ -330,6 +330,8 @@ z2.image(zoom_alpha_trunc, clamp=True, caption="Zoomed Lesion α (truncated)")
 z3.image(zoom_comp, clamp=True, caption="Zoomed Composite")
 
 # Profiles
+fig_row = None
+fig_col = None
 if show_profiles:
     st.divider()
     st.subheader("Center-line intensity profiles (Composite)")
@@ -341,17 +343,17 @@ if show_profiles:
 
     c1, c2 = st.columns(2)
     with c1:
-        fig, ax = plt.subplots()
+        fig_row, ax = plt.subplots()
         ax.plot(x_row, prow)
         ax.axvline(cx_prof, linestyle=":", alpha=0.7)
         ax.set_title(f"Row profile (y={cy_prof})")
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig_row, use_container_width=True)
     with c2:
-        fig, ax = plt.subplots()
+        fig_col, ax = plt.subplots()
         ax.plot(x_col, pcol)
         ax.axvline(cy_prof, linestyle=":", alpha=0.7)
         ax.set_title(f"Column profile (x={cx_prof})")
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig_col, use_container_width=True)
 
 st.divider()
 
@@ -434,6 +436,19 @@ with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
     zf.writestr("gibbs_overlay.png", img_bytes(img_overlay))
     zf.writestr("lesion_alpha_clean.png", img_bytes(img_alpha_clean))
     zf.writestr("lesion_alpha_trunc.png", img_bytes(img_alpha_trunc))
+
+    # Save profiles if they exist
+    if show_profiles and fig_row is not None and fig_col is not None:
+        buf_row = BytesIO()
+        fig_row.savefig(buf_row, format="png", bbox_inches="tight")
+        buf_row.seek(0)
+        zf.writestr("profile_row.png", buf_row.getvalue())
+
+        buf_col = BytesIO()
+        fig_col.savefig(buf_col, format="png", bbox_inches="tight")
+        buf_col.seek(0)
+        zf.writestr("profile_col.png", buf_col.getvalue())
+
     zf.writestr("config.txt", cfg_txt)
 zip_bytes = zip_buf.getvalue()
 
