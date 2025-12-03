@@ -269,18 +269,15 @@ with st.sidebar:
             "oval_ratio2": float(oval_ratio2),
         }
 
-# # ----- Truncate lesion -----
-# lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
-# lesion_alpha_trunc = np.clip(lesion_alpha_trunc, 0.0, 1.0)
-
-# # ----- Overlay on background -----
-# composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
-
-# ---- Try with contrast enhanced lesion
-lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
-lesion_alpha_trunc = enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean, thresh=0.05, gamma=1.0)
-# now blend
-composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
+enhance_contrast = True # whether to enhance the contrast WITHIN the emboli
+if enhance_contrast:
+  lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
+  lesion_alpha_trunc = enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean, thresh=0.05, gamma=1.0)
+  composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
+else:
+  lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
+  lesion_alpha_trunc = np.clip(lesion_alpha_trunc, 0.0, 1.0)
+  composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
 
 
 # ----- Zoom -----
