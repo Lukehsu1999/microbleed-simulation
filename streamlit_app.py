@@ -249,8 +249,13 @@ with st.sidebar:
         radius = st.slider("Radius (px)", 1, 30, value=8)
         oval_ratio = st.slider("Oval ratio (x stretch)", 0.5, 2.0, 1.0, 0.01)
         if specify_center:
-            cx = st.slider("Center X (px)", 0, W-1, cx0)
-            cy = st.slider("Center Y (px)", 0, H-1, cy0)
+            cx_slider = st.slider("Center X (slider)", 0, W-1, cx0, 1, key="cx_slider")
+            cx_number = st.number_input("Center X (exact)", 0, W-1, int(cx_slider), 1, key="cx_number")
+            cx = int(cx_number)
+          
+            cy_slider = st.slider("Center Y (slider)", 0, H-1, cy0, 1, key="cy_slider")
+            cy_number = st.number_input("Center Y (exact)", 0, H-1, int(cy_slider), 1, key="cy_number")
+            cy = int(cy_number)
         else:
             cx, cy = cx0, cy0
         lesion_alpha_clean = make_disk(
