@@ -180,7 +180,7 @@ with st.sidebar:
     strength = st.slider("Blend strength", 0.0, 1.0, 0.85, 0.01)
 
     st.header("Gibbs (on lesion ONLY)")
-    keep_frac = st.slider("Keep fraction", 0.02, 1.0, 0.18, 0.01)
+    keep_frac = st.slider("Keep fraction", 0.02, 1.0, 0.5, 0.01)
     circular_lp = st.checkbox("Circular low-pass", value=True)
     show_kspace = st.checkbox("Show lesion |K| (log)", value=True)
 
@@ -204,7 +204,7 @@ cx0, cy0 = W // 2, H // 2
 # ----- Build lesion -----
 with st.sidebar:
     if mode == "Single disk/ellipse":
-        radius = st.slider("Radius (px)", 1, max(4, min(H, W)//3), value=max(5, min(H, W)//32))
+        radius = st.slider("Radius (px)", 1, 30, value=8)
         oval_ratio = st.slider("Oval ratio (x stretch)", 0.5, 2.0, 1.0, 0.01)
         if specify_center:
             cx = st.slider("Center X (px)", 0, W-1, cx0)
