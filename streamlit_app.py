@@ -11,6 +11,26 @@ from io import BytesIO
 import zipfile, json
 from datetime import datetime
 
+# ----- Try enhancing in-lesion contrast -------
+def enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean,
+                         thresh=0.05, gamma=1.0):
+    """
+    Boost contrast of the truncated lesion alpha *within* the lesion support.
+    - thresh: define support from clean alpha (where lesion exists)
+    - gamma: optional nonlinearity (gamma<1 -> fatter core, gamma>1 -> thinner core)
+    """
+    a = lesion_alpha_trunc.copy()
+    support = lesion_alpha_clean > thresh
+    vals = a[support]
+    if vals.size > 0:
+        vmin, vmax = vals.min(), vals.max()
+        if vmax - vmin > 1e-6:
+            vals = (vals - vmin) / (vmax - vmin)  # stretch to [0,1]
+            if gamma != 1.0:
+                vals = vals**gamma
+            a[support] = vals
+    return np.clip(a, 0.0, 1.0)
+
 # ---------- Fourier helpers (centered FFT/IFFT) ----------
 def fft2c(x: np.ndarray) -> np.ndarray:
     return np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(x)))
@@ -249,12 +269,19 @@ with st.sidebar:
             "oval_ratio2": float(oval_ratio2),
         }
 
-# ----- Truncate lesion -----
-lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
-lesion_alpha_trunc = np.clip(lesion_alpha_trunc, 0.0, 1.0)
+# # ----- Truncate lesion -----
+# lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
+# lesion_alpha_trunc = np.clip(lesion_alpha_trunc, 0.0, 1.0)
 
-# ----- Overlay on background -----
+# # ----- Overlay on background -----
+# composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
+
+# ---- Try with contrast enhanced lesion
+lesion_alpha_trunc, lp_mask, k, k_trunc = truncate_image(lesion_alpha_clean, keep_frac, circular=circular_lp)
+lesion_alpha_trunc = enhance_lesion_alpha(lesion_alpha_trunc, lesion_alpha_clean, thresh=0.05, gamma=1.0)
+# now blend
 composite = blend_lesion(bg, lesion_alpha_trunc, dark_val=dark_val, strength=strength)
+
 
 # ----- Zoom -----
 with st.sidebar:
